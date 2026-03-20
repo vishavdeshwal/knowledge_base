@@ -832,10 +832,6 @@ This expired certificate needs to be renewed before production cutover to avoid 
 | MailEnable Admin Console | Start Menu → MailEnable Administration (MMC) |
 
 ---
-
-*Document prepared for Infinite Locus Pvt. Ltd.*  
-*Full migration story: On-Premise → AWS MGN → EC2 Windows Server → MailEnable test domain setup*
-
 ---
 
 ## Phase 3B — Fresh Server MailEnable Configuration
