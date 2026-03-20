@@ -880,7 +880,7 @@ $Shortcut2.Save()
 
 Right-click **Post Offices** in the left panel → **New Post Office**:
 
-![Create New Post Office Dialog](../../Images/15-create-postoffice.png)
+![Create New Post Office Dialog](../../Images/15-create-postoffice.jpeg)
 
 ```
 Post Office Name: <project-name>staging
@@ -909,7 +909,7 @@ Post Offices → <project-name>staging → Mailboxes
 → Right-click → New Mailbox
 ```
 
-![Create New Mailbox Dialog](../../Images/16-create-mailbox.png)
+![Create New Mailbox Dialog](../../Images/16-create-mailbox.jpeg)
 
 Create two mailboxes:
 
