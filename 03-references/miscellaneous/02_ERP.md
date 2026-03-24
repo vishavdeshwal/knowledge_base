@@ -34,7 +34,7 @@ ERPNext handles: Accounting & Finance, HR & Payroll, Inventory & Warehouse, CRM 
 |---|---|---|
 | **Python 3.10+** | Backend language | Frappe is Python-based |
 | **pip / venv** | Python package manager + virtual env | Isolates Python deps per bench |
-| **Node.js 18+** | JS runtime | Builds frontend assets (Vue/JS) |
+| **Node.js 20+** | JS runtime | Builds frontend assets (Vue/JS) |
 | **yarn** | JS package manager | Installs frontend dependencies |
 | **MariaDB 10.6+** | Relational database | Stores all ERP data |
 | **Redis** | In-memory store | Cache, queue (background jobs), socketio |
@@ -100,23 +100,35 @@ sudo mysql_secure_installation
 ### Configure MariaDB for Frappe
 
 ```bash
-sudo nano /etc/mysql/mariadb.conf.d/50-server.cnf
+sudo vi /etc/mysql/mariadb.conf.d/50-server.cnf
 ```
 
-Add/update under `[mysqld]`:
+> ⚠️ **CRITICAL — Section Order Matters**
+> MariaDB config files are parsed top-to-bottom. The `[mysql]` client block **must appear before** `[mysqld]`. If you place `[mysqld]` above `[mysql]`, MariaDB will throw charset errors and `bench new-site` will fail with collation mismatches.
+> **Wrong order = broken site creation. Always follow the exact sequence below.**
+
+Add/update in this **exact order**:
 
 ```ini
+[server]
+
+[mysql]
+default-character-set = utf8mb4
+
 [mysqld]
 character-set-client-handshake = FALSE
 character-set-server = utf8mb4
 collation-server = utf8mb4_unicode_ci
-
-[mysql]
-default-character-set = utf8mb4
 ```
 
 ```bash
 sudo systemctl restart mariadb
+```
+
+Verify the settings were applied:
+```bash
+mysql -u root -p -e "SHOW VARIABLES LIKE 'character_set_server';"
+# Must return: utf8mb4
 ```
 
 > **Why utf8mb4?** Frappe stores emoji and multi-byte characters. `utf8` in MySQL only supports 3-byte chars; `utf8mb4` is the true full Unicode set.
@@ -145,11 +157,13 @@ redis-cli ping
 
 **What this does:** Node.js compiles and bundles frontend JavaScript/CSS assets. yarn manages JS packages.
 
+> ⚠️ **Use Node.js 20, not 18.** Some Frappe apps including India Compliance and HRMS have dropped compatibility with Node 18. Always install Node 20 to avoid build failures mid-setup.
+
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
 
-node -v   # Should be v18.x
+node -v   # Should be v20.x
 npm -v
 
 sudo npm install -g yarn
@@ -323,24 +337,96 @@ For a real server, replace `bench start` with proper Nginx + Supervisor.
 ```bash
 sudo bench setup production frappe
 
-# Auto-generates and installs:
-# /etc/nginx/conf.d/frappe-bench.conf      ← server_name set to <client-application-name>
-# /etc/supervisor/conf.d/frappe-bench.conf ← gunicorn, workers, scheduler
+# Auto-generates:
+# /home/frappe/frappe-bench/config/supervisor.conf  ← bench-local supervisor config
+# /home/frappe/frappe-bench/config/nginx.conf       ← bench-local nginx config
 ```
 
-### Reload services
+> ⚠️ **`bench setup production` generates configs but does NOT always link them to system daemons automatically.** You must manually verify and symlink supervisor config — see below.
+
+### Symlink Supervisor Config (Critical Step)
+
+`bench setup production` writes the supervisor config to the bench's local `config/` folder. The system `supervisord` only reads from `/etc/supervisor/conf.d/`. If the symlink is missing, supervisord starts with zero processes — no web, no workers, no scheduler.
 
 ```bash
-sudo supervisorctl reload
+# Check if the symlink exists
+ls -l /etc/supervisor/conf.d/
+
+# If empty or frappe-bench.conf is missing — create the symlink manually
+sudo ln -s /home/frappe/frappe-bench/config/supervisor.conf \
+  /etc/supervisor/conf.d/frappe-bench.conf
+
+# Tell supervisord to re-read configs
+sudo supervisorctl reread
+
+# Apply — starts all newly discovered process groups
+sudo supervisorctl update
+```
+
+### Verify All Processes Are Running
+
+```bash
+sudo supervisorctl status
+```
+
+Expected output:
+```
+frappe-bench-redis:frappe-bench-redis-cache        RUNNING
+frappe-bench-redis:frappe-bench-redis-queue        RUNNING
+frappe-bench-web:frappe-bench-frappe-web           RUNNING
+frappe-bench-web:frappe-bench-node-socketio        RUNNING
+frappe-bench-workers:frappe-bench-frappe-schedule         RUNNING
+frappe-bench-workers:frappe-bench-frappe-short-worker-0   RUNNING
+frappe-bench-workers:frappe-bench-frappe-long-worker-0    RUNNING
+```
+
+> If any process shows `STOPPED` or `FATAL` — check logs: `tail -f ~/frappe-bench/logs/web.error.log`
+
+### Reload Nginx
+
+```bash
+sudo nginx -t
 sudo systemctl reload nginx
 sudo systemctl enable supervisor nginx
 ```
 
-### Set default site
+### Set Default Site
 
 ```bash
 bench use <client-application-name>
 ```
+
+---
+
+## Step 13b — Map a Domain to the Site
+
+**What this does:** Links a public domain/subdomain to an existing site folder without renaming the site directory. This is the correct approach when your site was created with a short name (e.g. `<site-name>`) but needs to be accessed via a full domain (e.g. `erp-staging.<root-domain>.com`).
+
+```bash
+bench setup add-domain <your-domain> --site <client-application-name>
+
+# Example:
+bench setup add-domain erp-staging.<root-domain>.com --site <site-name>
+```
+
+**What this does internally:**
+- Adds the domain to `sites/<client-application-name>/site_config.json` under `"domains"`
+- Updates the Nginx config `server_name` to include the new domain
+
+Verify it was written:
+```bash
+cat sites/<client-application-name>/site_config.json
+# Should show:
+# "domains": ["erp-staging.<root-domain>.com"]
+```
+
+Then regenerate and reload Nginx:
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+> ⚠️ **Do NOT run `bench setup nginx` after certbot has already issued an SSL cert.** It will overwrite the SSL config certbot injected. Always just run `sudo nginx -t && sudo systemctl reload nginx` for subsequent changes.
 
 ---
 
@@ -421,6 +507,32 @@ sudo snap install --classic certbot
 sudo certbot --nginx -d erp.<client-application-name>.com
 ```
 
+> After certbot runs, it automatically injects `listen 443 ssl` and the certificate paths into `/etc/nginx/conf.d/frappe-bench.conf`. Always verify with `sudo nginx -t` before reloading.
+
+---
+
+## Step 15a — Fix Nginx Static Asset Permissions
+
+**What this does:** After SSL is set up, you may find the site loads but looks completely broken — no CSS, no icons, plain HTML only. This is a Linux permissions issue, not an app issue.
+
+**Why it happens:** Nginx runs as `www-data`. To serve static assets from `/home/frappe/frappe-bench/sites/assets/`, it needs execute (`+x`) permission on every parent directory in that path. By default, `/home/frappe` is not world-executable — so `www-data` gets blocked before it even reaches the assets folder.
+
+```bash
+# Allow www-data to traverse the frappe user's home directory
+chmod o+x /home/frappe
+chmod o+x /home/frappe/frappe-bench
+
+# Allow www-data to read all static asset files
+chmod -R o+r /home/frappe/frappe-bench/sites/assets
+```
+
+Then reload Nginx:
+```bash
+sudo systemctl reload nginx
+```
+
+> This is a **one-time fix per server**. Add these lines to your automation script right after `bench setup production`.
+
 ---
 
 ## Quick Reference — Full Command Sequence
@@ -434,14 +546,15 @@ sudo apt install -y git curl wget python3 python3-dev python3-pip python3-venv \
 # 2. MariaDB
 sudo apt install -y mariadb-server mariadb-client
 sudo mysql_secure_installation
-# Edit /etc/mysql/mariadb.conf.d/50-server.cnf (utf8mb4 settings)
+# Edit /etc/mysql/mariadb.conf.d/50-server.cnf
+# SEQUENCE: [server] → [mysql] (utf8mb4) → [mysqld] (utf8mb4 + handshake)
 sudo systemctl restart mariadb
 
 # 3. Redis
 sudo apt install -y redis-server
 
-# 4. Node.js + yarn
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+# 4. Node.js 20 + yarn  ← must be Node 20, not 18
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
 sudo npm install -g yarn
 
@@ -474,10 +587,28 @@ bench start
 
 # 13. Production
 sudo bench setup production frappe
+
+# 13a. Symlink supervisor config if not auto-linked
+sudo ln -s /home/frappe/frappe-bench/config/supervisor.conf \
+  /etc/supervisor/conf.d/frappe-bench.conf
+sudo supervisorctl reread && sudo supervisorctl update
+
+# 13b. Map domain to site
+bench setup add-domain erp.<client-application-name>.com --site <client-application-name>
+
+# 14. Nginx
+sudo nginx -t && sudo systemctl reload nginx
 bench use <client-application-name>
 
-# 14. SSL (once DNS is pointed)
+# 15. SSL (once DNS A record is pointed)
+sudo snap install --classic certbot
 sudo certbot --nginx -d erp.<client-application-name>.com
+
+# 15a. Fix static asset permissions for Nginx
+chmod o+x /home/frappe
+chmod o+x /home/frappe/frappe-bench
+chmod -R o+r /home/frappe/frappe-bench/sites/assets
+sudo systemctl reload nginx
 ```
 
 ---
@@ -492,3 +623,485 @@ sudo certbot --nginx -d erp.<client-application-name>.com
 | Run migrations only | `bench --site <client-application-name> migrate` |
 | Add another client site | `bench new-site <another-client-application-name>` |
 | Tail logs | `tail -f ~/frappe-bench/logs/*.log` |
+
+---
+
+## Troubleshooting — Common Issues & Fixes
+
+### 🔴 `bench` command not found after install
+
+**Symptom:**
+```
+bench: command not found
+```
+**Cause:** pip installed bench into a path not in `$PATH`.
+
+**Fix:**
+```bash
+# Find where bench was installed
+pip3 show frappe-bench | grep Location
+
+# Add to PATH (add this to ~/.bashrc as well)
+export PATH=$PATH:/home/frappe/.local/bin
+
+# Reload shell
+source ~/.bashrc
+```
+
+---
+
+### 🔴 `bench init` fails — yarn/node errors
+
+**Symptom:**
+```
+ERROR: Please install yarn
+```
+or
+```
+error: node: command not found
+```
+**Cause:** Node.js or yarn not installed, or installed as root but running as `frappe` user.
+
+**Fix:**
+```bash
+# Verify as the frappe user
+node -v
+yarn -v
+
+# If missing, reinstall as root then verify as frappe user
+sudo npm install -g yarn
+```
+
+---
+
+### 🔴 `bench init` fails midway — incomplete bench directory
+
+**Symptom:** bench init ran but stopped halfway. Re-running gives folder already exists error.
+
+**Fix:** Delete the incomplete bench and start fresh.
+```bash
+rm -rf ~/frappe-bench
+bench init --frappe-branch version-15 ~/frappe-bench
+```
+
+---
+
+### 🔴 MariaDB access denied during `bench new-site`
+
+**Symptom:**
+```
+Access denied for user 'root'@'localhost'
+```
+**Cause:** MariaDB root password not set, or wrong password entered.
+
+**Fix:**
+```bash
+# Reset MariaDB root access
+sudo mysql
+ALTER USER 'root'@'localhost' IDENTIFIED BY '<new-db-root-password>';
+FLUSH PRIVILEGES;
+EXIT;
+
+# Then re-run site creation
+bench new-site <client-application-name>
+```
+
+---
+
+### 🔴 `bench new-site` fails — charset/collation error
+
+**Symptom:**
+```
+Incorrect string value or character set mismatch
+```
+**Cause:** MariaDB utf8mb4 config from Step 2 was not applied correctly.
+
+**Fix:**
+```bash
+# Verify the settings are active
+mysql -u root -p -e "SHOW VARIABLES LIKE 'character_set_server';"
+# Should show: utf8mb4
+
+# If not, re-check /etc/mysql/mariadb.conf.d/50-server.cnf and restart
+sudo systemctl restart mariadb
+```
+
+---
+
+### 🔴 `bench start` fails — port 8000 already in use
+
+**Symptom:**
+```
+OSError: [Errno 98] Address already in use
+```
+**Cause:** A previous `bench start` is still running, or another process holds port 8000.
+
+**Fix:**
+```bash
+# Find what's using port 8000
+sudo lsof -i :8000
+
+# Kill it
+sudo kill -9 <PID>
+
+# Or kill all bench processes cleanly
+bench stop
+```
+
+---
+
+### 🔴 `bench start` fails — Redis connection refused
+
+**Symptom:**
+```
+Error 111 connecting to localhost:6379. Connection refused.
+```
+**Cause:** Redis service is not running.
+
+**Fix:**
+```bash
+sudo systemctl start redis-server
+sudo systemctl status redis-server
+redis-cli ping   # Should return PONG
+```
+
+---
+
+### 🔴 CSS / JS not loading in browser (blank/broken UI)
+
+**Symptom:** ERPNext loads but looks broken — no styles, no icons, JS errors in browser console.
+
+**Cause:** Frontend assets were never built.
+
+**Fix:**
+```bash
+cd ~/frappe-bench
+bench build --app erpnext
+
+# If that fails due to node_modules missing
+bench setup requirements --node
+bench build --app erpnext
+```
+
+---
+
+### 🔴 502 Bad Gateway after production setup
+
+**Symptom:** Nginx is running but browser shows `502 Bad Gateway`.
+
+**Cause:** Gunicorn (Frappe web process) is not running. Supervisor failed to start it.
+
+**Fix:**
+```bash
+# Check supervisor status
+sudo supervisorctl status
+
+# If frappe processes show STOPPED or FATAL
+sudo supervisorctl start all
+
+# Check supervisor logs for the actual error
+sudo tail -f /var/log/supervisor/supervisord.log
+tail -f ~/frappe-bench/logs/web.error.log
+```
+
+---
+
+### 🔴 Nginx shows default page instead of ERPNext
+
+**Symptom:** Nginx is up, gunicorn is up, but browser shows the default Nginx welcome page.
+
+**Cause:** The default Nginx site is overriding the frappe config.
+
+**Fix:**
+```bash
+# Disable default site
+sudo rm /etc/nginx/sites-enabled/default
+
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+---
+
+### 🔴 Site not found — "No website" error in browser
+
+**Symptom:** ERPNext loads but shows `No website found for <client-application-name>`.
+
+**Cause:** Default site not set in bench, or `currentsite.txt` is missing.
+
+**Fix:**
+```bash
+bench use <client-application-name>
+
+# Verify it was written
+cat ~/frappe-bench/sites/currentsite.txt
+```
+
+---
+
+### 🔴 `bench setup production` fails — permission denied
+
+**Symptom:**
+```
+sudo: bench: command not found
+```
+**Cause:** `bench` is installed in the `frappe` user's local path, not in the system path. `sudo` uses a different PATH.
+
+**Fix:**
+```bash
+# Use the full path
+sudo env PATH=$PATH:/home/frappe/.local/bin bench setup production frappe
+```
+
+---
+
+### 🔴 `bench get-app erpnext` fails — SSL certificate error or timeout
+
+**Symptom:**
+```
+SSL: CERTIFICATE_VERIFY_FAILED
+```
+or just hangs/times out.
+
+**Cause:** DNS resolution issue, GitHub rate limiting, or outdated SSL certs on the server.
+
+**Fix:**
+```bash
+# Update SSL certs
+sudo apt install --reinstall ca-certificates
+
+# Test GitHub reachability
+curl -I https://github.com
+
+# If GitHub is blocked on this server, download on your machine and scp over
+```
+
+---
+
+### 🔴 wkhtmltopdf not working — PDF generation fails
+
+**Symptom:** Print format or invoice PDF shows error or blank output.
+
+**Cause:** Wrong version of wkhtmltopdf installed (apt version lacks patched QT).
+
+**Fix:**
+```bash
+# Check current version
+wkhtmltopdf --version
+# Must show: wkhtmltopdf 0.12.6.1 (with patched qt)
+# If it shows "without patched qt" — reinstall from Step 5
+
+# Re-download and reinstall the patched version
+wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.jammy_amd64.deb
+sudo dpkg -i wkhtmltox_0.12.6.1-3.jammy_amd64.deb
+```
+
+---
+
+### 🔴 `bench update` breaks the site — migration errors
+
+**Symptom:** After `bench update`, ERPNext throws 500 errors or migration fails halfway.
+
+**Cause:** App update introduced breaking schema changes.
+
+**Fix:**
+```bash
+# Always backup BEFORE updating
+bench --site <client-application-name> backup
+
+# If migration failed, run it manually with verbose output
+bench --site <client-application-name> migrate --verbose
+
+# Check error logs
+tail -f ~/frappe-bench/logs/worker.error.log
+```
+
+---
+
+### 🔴 Scheduler not running — background jobs stuck
+
+**Symptom:** Emails not sending, scheduled reports not triggering, background tasks stuck.
+
+**Cause:** Frappe scheduler is disabled or the worker process is down.
+
+**Fix:**
+```bash
+# Check if scheduler is enabled
+bench --site <client-application-name> scheduler status
+
+# Enable it
+bench --site <client-application-name> enable-scheduler
+
+# Check worker process via supervisor
+sudo supervisorctl status | grep worker
+sudo supervisorctl start frappe-bench-frappe-default-worker:*
+```
+
+---
+
+### 🔴 MariaDB charset error — wrong section order in 50-server.cnf
+
+**Symptom:**
+```
+Incorrect string value or character set mismatch
+```
+or `bench new-site` fails with a DB error even though utf8mb4 is set.
+
+**Cause:** The `[mysqld]` section was placed **above** `[mysql]` in the config file. MariaDB parses top-to-bottom — if `[mysqld]` comes first, the `[mysql]` client settings never override correctly, causing collation mismatches.
+
+**Fix:** Edit `/etc/mysql/mariadb.conf.d/50-server.cnf` and ensure this exact order:
+
+```ini
+[server]
+
+[mysql]
+default-character-set = utf8mb4
+
+[mysqld]
+character-set-client-handshake = FALSE
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+```
+
+```bash
+sudo systemctl restart mariadb
+mysql -u root -p -e "SHOW VARIABLES LIKE 'character_set_server';"
+# Must return utf8mb4
+```
+
+---
+
+### 🔴 Supervisor shows empty / all processes STOPPED after `bench setup production`
+
+**Symptom:**
+```bash
+sudo supervisorctl status
+# Returns nothing, or all processes show STOPPED
+```
+
+**Cause — what actually happened:**
+`bench setup production` writes the supervisor config to the bench's **local** `config/` directory at `/home/frappe/frappe-bench/config/supervisor.conf`. It does **not** always create the symlink in `/etc/supervisor/conf.d/` automatically. Without that symlink, the system `supervisord` daemon has no idea Frappe processes exist — so it starts nothing.
+
+This is a known silent failure point: no error is thrown, supervisord just runs empty.
+
+**Fix:**
+```bash
+# Confirm the bench config exists
+ls -l /home/frappe/frappe-bench/config/supervisor.conf
+
+# Confirm symlink is missing
+ls -l /etc/supervisor/conf.d/
+
+# Create the symlink
+sudo ln -s /home/frappe/frappe-bench/config/supervisor.conf \
+  /etc/supervisor/conf.d/frappe-bench.conf
+
+# Reload supervisord
+sudo supervisorctl reread
+sudo supervisorctl update
+
+# Verify
+sudo supervisorctl status
+```
+
+**How to prevent in future installations:**
+Add this block explicitly to your setup script right after `bench setup production`:
+
+```bash
+# Always force-create the symlink — idempotent, safe to re-run
+sudo ln -sf /home/frappe/frappe-bench/config/supervisor.conf \
+  /etc/supervisor/conf.d/frappe-bench.conf
+sudo supervisorctl reread
+sudo supervisorctl update
+```
+
+> `-sf` flag = symlink + force overwrite if it already exists. Safe for scripted runs.
+
+---
+
+### 🔴 Site loads as plain HTML — no CSS, no icons, broken UI (Nginx permission issue)
+
+**Symptom:** HTTPS works, ERPNext loads, but zero styling — plain text, no sidebar icons, no theme. Browser console shows `403 Forbidden` on `/assets/` paths.
+
+**Cause:** Nginx runs as `www-data`. To serve static files from `/home/frappe/frappe-bench/sites/assets/`, it needs execute (`+x`) permission on **every parent directory** in that path. By default `/home/frappe` is mode `750` — `www-data` cannot traverse it.
+
+```
+www-data tries to read:
+/home/frappe/frappe-bench/sites/assets/frappe/css/desk.css
+      ↑
+      403 blocked here — no execute on /home/frappe
+```
+
+**Fix:**
+```bash
+chmod o+x /home/frappe
+chmod o+x /home/frappe/frappe-bench
+chmod -R o+r /home/frappe/frappe-bench/sites/assets
+
+sudo systemctl reload nginx
+```
+
+**Verify:**
+```bash
+# Test as www-data directly
+sudo -u www-data ls /home/frappe/frappe-bench/sites/assets/
+# Should list files, not permission denied
+```
+
+**Prevention:** Add these three `chmod` lines to your automation script immediately after `bench setup production`.
+
+---
+
+### 🔴 `bench setup nginx` after certbot wipes SSL config
+
+**Symptom:** After running `bench setup nginx` post-SSL, the site reverts to HTTP only. Certbot's `listen 443 ssl` block and certificate paths are gone.
+
+**Cause:** `bench setup nginx` regenerates the config from scratch using the bench template — it has no awareness of certbot's additions.
+
+**Fix:** Rerun certbot to re-inject SSL:
+```bash
+sudo certbot --nginx -d erp.<client-application-name>.com
+```
+
+**Prevention:** After certbot has issued a cert, **never run `bench setup nginx` again**. For any Nginx changes, edit `/etc/nginx/conf.d/frappe-bench.conf` directly and use:
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+---
+
+### 📋 General Diagnostic Commands
+
+```bash
+# Full bench process status
+sudo supervisorctl status
+
+# Nginx config test
+sudo nginx -t
+
+# Live web server log
+tail -f ~/frappe-bench/logs/web.log
+
+# Live worker error log
+tail -f ~/frappe-bench/logs/worker.error.log
+
+# Live scheduler log
+tail -f ~/frappe-bench/logs/schedule.log
+
+# Check site config
+cat ~/frappe-bench/sites/<client-application-name>/site_config.json
+
+# Check which site is active
+cat ~/frappe-bench/sites/currentsite.txt
+
+# Test DB connection manually
+mysql -u root -p -e "SHOW DATABASES;" | grep <client-application-name>
+
+# Check Redis
+redis-cli ping
+redis-cli info | grep connected_clients
+
+# Check Nginx is actually serving the right site
+curl -I https://erp.<client-application-name>.com
+# Look for: X-Frappe-Site-Name header
+```

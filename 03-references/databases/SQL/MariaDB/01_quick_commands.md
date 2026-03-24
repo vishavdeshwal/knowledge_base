@@ -41,8 +41,17 @@ mariadb -h <host> -u <user> -p <database> < dump.sql
 
 ---
 
-## Users
+## User Management
 
+**Create User:**
+```sql
+CREATE USER '<user>'@'%' IDENTIFIED BY '<password>';
+```
+
+**List users:**
+```sql
+SELECT User, Host FROM mysql.user;
+```
 **List all users:**
 ```sql
 SELECT user, host, password_expired, is_role
