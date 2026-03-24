@@ -398,7 +398,7 @@ bench use <client-application-name>
 
 ---
 
-## Step 13b — Map a Domain to the Site
+## Step 13a — Map a Domain to the Site
 
 **What this does:** Links a public domain/subdomain to an existing site folder without renaming the site directory. This is the correct approach when your site was created with a short name (e.g. `<site-name>`) but needs to be accessed via a full domain (e.g. `erp-staging.<root-domain>.com`).
 
@@ -430,7 +430,7 @@ sudo systemctl reload nginx
 
 ---
 
-## Step 13a — Nginx Configuration (What Gets Generated)
+## Step 13b — Nginx Configuration (What Gets Generated)
 
 `bench setup production` auto-generates `/etc/nginx/conf.d/frappe-bench.conf`. Here is what it produces and what each block does:
 
