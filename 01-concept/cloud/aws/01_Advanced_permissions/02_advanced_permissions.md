@@ -10,12 +10,12 @@ Organization root (a container of all accounts) is the root of the organization.
 
 ### Arrangement of Organization Root, OUs and accounts inside it
 
-![Organization Root](../../../Images/Organization_Root.png)
+![Organization Root](../../../../Images/Organization_Root.png)
 ---
-![Organization Unit Creation](../../../Images/OU_creation.png)
+![Organization Unit Creation](../../../../Images/OU_creation.png)
 
 ---
-![Organization Units](../../../Images/OUs_account.png)
+![Organization Units](../../../../Images/OUs_account.png)
 
 ### Benefits
 - Centralized billing
@@ -30,7 +30,7 @@ Organization root (a container of all accounts) is the root of the organization.
 - Centralized audit management
 - Centralized logging management
 
-![AWS Organizations](../../../Images/aws_organization.png)
+![AWS Organizations](../../../../Images/aws_organization.png)
 
 
 ### Service Control Policies (SCPs)
@@ -42,7 +42,7 @@ Management account of Organization cannot be restricted using SCPs, hence we nev
     - They limit what the account (including account root user) can do.
     - Allow list vs Deny list about certain services.
 
-![SCPs](../../../Images/scp.png)
+![SCPs](../../../../Images/scp.png)
 ---
 
 
@@ -51,10 +51,10 @@ Management account of Organization cannot be restricted using SCPs, hence we nev
 - Similar to access Keys but they expires and short terms.
 - They have limited AWS resources access and requested by an Identity (AWS or External)
 
-![STS Service](../../../Images/sts_service.png)
+![STS Service](../../../../Images/sts_service.png)
 
 #### How to revoke temporary credentials 
-![Revoke STS creds](../../../Images/revoke_sts_creds.png)
+![Revoke STS creds](../../../../Images/revoke_sts_creds.png)
 
 -   Revoke all existing sessions using an `Inline Policy` that deny for any sessions older than Current time.
 - Bad Actor still have the valid temporary credentials but Deny Policy will take effect because of `sts:SessionIssuer` condition key.
@@ -120,7 +120,7 @@ Management account of Organization cannot be restricted using SCPs, hence we nev
     ]
 }
 ```
-- We have a [] square bracket representing a list with two Statement Blocks under which there are two {} curly braces, each representing a statement.
+- We have a [ ] square bracket representing a list with two Statement Blocks under which there are two {} curly braces, each representing a statement.
 - Effect: It either Allow or Deny explicitly.
     - Implicit Deny: If something is not allowed, it is denied.
     - Explicit Deny: It always wins
@@ -211,7 +211,7 @@ Management account of Organization cannot be restricted using SCPs, hence we nev
     ]
 }
 ```
-- Statement [] block is a list of statements, with three Effects.
+- Statement [ ] block is a list of statements, with three Effects.
 - First statement block is Allowed 2 Actions on *(all) resources.
     - Can check which region a bucket is in.
 - Second statement block is Allow 1 Action (list) on a specific bucket but with a condition.
@@ -238,7 +238,7 @@ AWS reads the identity from the signed API request (via SigV4 signature + creden
 
 ---
 ### Permission Boundaries and Use Cases
-![Permission Boundary](../../../Images/permission_boundary.png)
+![Permission Boundary](../../../../Images/permission_boundary.png)
 - They are the json permission that will only tell if a user is allowed to perform a certain action vs Identity policies which actually gives those permissions.
 - **Deligation Problem:-**
     - If one Admin User wants to give another user an administrator rights.
@@ -246,7 +246,7 @@ AWS reads the identity from the signed API request (via SigV4 signature + creden
 - To let this delegation happen we use Permission boundaries.
 > Create user boundary Policy ---> Create IAM policy for Bob (admin user) + Admin Boundary -------> 
 
-![Admin boundaries](../../../Images/permission_boundary_1.png)
+![Admin boundaries](../../../../Images/permission_boundary_1.png)
 
 __User Boundaries Policy__
 ```json
@@ -402,7 +402,7 @@ __Admin permission policy__
 ```
 ---
 ## 4. Policy Evaluation Logic
-![Policy evaluation](../../../Images/policy_evaluation_logic.png)
+![Policy evaluation](../../../../Images/policy_evaluation_logic.png)
 These are the policies that AWS use to decide what principal has what level of access of resources.
 - Gather all of the policies that apply to that access requested.
 - Explicit Deny ---> No ------> SCPs (only AWS Organization)
@@ -411,7 +411,7 @@ These are the policies that AWS use to decide what principal has what level of a
 - If no Permission boundary ----> IAM policy
 
 ## 5. Resource Access Manager (RAM)
-![RAM](../../../Images/RAM.png)
+![RAM](../../../../Images/RAM.png)
 - Subnet by Owner is shared accross Organization.
 ---
 - Shares AWS resource between `AWS Accounts.`
@@ -425,7 +425,7 @@ These are the policies that AWS use to decide what principal has what level of a
 - 
 
 ---
-![Availability Zone](../../../Images/naming_AZ.png)
+![Availability Zone](../../../../Images/naming_AZ.png)
 - AWS rotate their facility, your us-east-1a might be us-east-1b for another and vice-versa.
 - AWS implemented Availability Zone IDs to rectify this confusion.
     - **use1-az1 and use1-az2** = They are consistent accross accounts.
