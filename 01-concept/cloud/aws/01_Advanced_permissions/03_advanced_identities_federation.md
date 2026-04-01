@@ -9,4 +9,4 @@ SAML ***(Security Assertion Markup Language)*** is an XML-based open standard fo
 - Enterprise Identity Provider ... SAML 2.0 Compatible and not Google based.
 - Uses IAM Roles & AWS Temporary Creds __(12 hour validity)__
 
-![SAML](../../../Images/SAML.png)
+![SAML](../../../../Images/SAML.png)
