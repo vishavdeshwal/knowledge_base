@@ -2,7 +2,7 @@
 
 ---
 
-## Connect via CLI
+## 1. Connect via CLI
 
 **Basic connection:**
 ```bash
@@ -41,7 +41,7 @@ mariadb -h <host> -u <user> -p <database> < dump.sql
 
 ---
 
-## User Management
+## 2. User Management
 
 **Create User:**
 ```sql
@@ -84,7 +84,7 @@ WHERE Super_priv = 'Y';
 
 ---
 
-## Databases & Tables
+## 3. Databases & Tables
 
 **List all databases:**
 ```sql
@@ -139,7 +139,7 @@ SHOW INDEX FROM <table>;
 
 ---
 
-## User Management
+## 4. User Management
 
 **Create a user:**
 ```sql
@@ -186,7 +186,7 @@ FLUSH PRIVILEGES;
 
 ---
 
-## Performance
+## 5. Performance
 
 **Enable slow query log:**
 ```sql
@@ -218,3 +218,72 @@ SHOW TABLE STATUS FROM <database>;
 ---
 
 *EXPLAIN red flags: `type: ALL` = full scan | `Using temporary` = temp table | `Using filesort` = no index sort | `DEPENDENT SUBQUERY` = N+1*
+
+---
+
+## 6. Backup & Restore
+
+**Backup a database:**
+```sql
+mysqldump -u <user> -p <database> | gzip > <database>_$(date +%F).sql.gz
+```
+
+**Backup all databases:**
+```sql
+mysqldump -u <user> -p --all-databases | gzip > all_databases_$(date +%F).sql.gz
+```
+
+**Restore a database:**
+```sql
+gunzip < <file-name>.sql.gz | mysql -u <user> -p <database>
+```
+
+**SCP a backup file from remote server to your local machine:**
+```bash
+scp <remote-host>@<remote-ip>:/path/to/backup.sql.gz .
+```
+
+**SCP a backup file from local server to remote server**
+
+```bash
+scp /path/to/backup.sql.gz <remote-host>@<remote-ip>:/path/to/backup_directory/
+```
+---
+
+### 6.1 Checking Live Database Size
+
+Check for all the database that exists and their sizes.
+
+```sql
+SELECT 
+    table_schema AS "Database", 
+    ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS "Size in MB" 
+FROM 
+    information_schema.TABLES 
+WHERE 
+    table_schema = DATABASE();
+```
+
+Check for a specific database and it's size
+
+```sql
+SELECT 
+    table_schema AS "Database", 
+    ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS "Size in MB" 
+FROM 
+    information_schema.TABLES 
+WHERE 
+    table_schema = '<database-name>';
+```
+
+### 6.2 Restoring the zip file into database
+Make sure you create a separate database and then restore it, because current data of existing database and data in zip file might create issues.
+- If it is the same data and you are sure that it will not affect then only restore in the existing database.
+
+```bash
+zcat <database-backup-name>.sql.gz | mariadb -u <user> -p <database>
+
+
+# you could use root as well for restoring
+zcat <database-backup-name>.sql.gz | mariadb -u root -p <database>
+```
