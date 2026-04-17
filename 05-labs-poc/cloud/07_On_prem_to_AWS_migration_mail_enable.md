@@ -251,19 +251,19 @@ SMTP is a plain text conversation:
 
 ```
 Sender MTA                    Receiver MTA
-   |                               |
-   |--- TCP connect port 25 ------>|
-   |<-- 220 Ready -----------------|
-   |--- EHLO yourdomain.com ------>|
-   |<-- 250 OK + capabilities -----|
-   |--- MAIL FROM:<sender> ------->|
-   |<-- 250 OK --------------------|
-   |--- RCPT TO:<recipient> ------>|
-   |<-- 250 OK --------------------|
-   |--- DATA ---------------------->|
-   |<-- 354 Start input ------------|
-   |--- [headers + body + .] ------>|
-   |<-- 250 OK queued --------------|
+   |                                 |
+   |--- TCP connect port 25 -------->|
+   |<-- 220 Ready -------------------|
+   |--- EHLO yourdomain.com -------->|
+   |<-- 250 OK + capabilities -------|
+   |--- MAIL FROM:<sender> --------->|
+   |<-- 250 OK ----------------------|
+   |--- RCPT TO:<recipient> -------->|
+   |<-- 250 OK ----------------------|
+   |--- DATA ----------------------->|
+   |<-- 354 Start input -------------|
+   |--- [headers + body + .] ------->|
+   |<-- 250 OK queued ---------------|
    |--- QUIT ----------------------->|
 ```
 
