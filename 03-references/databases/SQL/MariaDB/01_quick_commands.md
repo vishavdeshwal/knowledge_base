@@ -226,6 +226,11 @@ SHOW TABLE STATUS FROM <database>;
 **Backup a database:**
 ```sql
 mysqldump -u <user> -p <database> | gzip > <database>_$(date +%F).sql.gz
+
+# If you dont have password
+
+mysqldump <database> | gzip > <database>_$(date +%F).sql.gz
+
 ```
 
 **Backup all databases:**

@@ -10,9 +10,9 @@
 |-------|--------|
 | Domain | `<root-domain>` |
 | Load Balancer | AWS ALB → forwards `/path*` to `wordpress-site` target group |
-| EC2 | Ubuntu, nginx, PHP 8.3-FPM, MySQL |
+| EC2 | Ubuntu, nginx, PHP 8.5-FPM, MySQL |
 | WordPress files | `/var/www/<sitename>/` |
-| PHP socket | `/run/php/php8.3-wordpress.sock` |
+| PHP socket | `/run/php/php8.5-wordpress.sock` |
 | nginx config | `/etc/nginx/sites-enabled/wordpress` |
 | PHP user | `wpuser:www-data` |
 
@@ -22,13 +22,32 @@
 
 ## Step 1 — Create Directory & Download WordPress
 
+> [!NOTE]
+> * **If you get `sudo: 'wp': command not found`:** WP-CLI is not installed. You can install it globally with:
+>   ```bash
+>   curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+>   chmod +x wp-cli.phar
+>   sudo mv wp-cli.phar /usr/local/bin/wp
+>   ```
+> * **If you get `env: 'php': No such file or directory`:** The PHP command line interface is missing. Install it natively:
+>   ```bash
+>   sudo apt update
+>   sudo apt install php8.5-cli -y
+>   ```
+>   Verify with `wp --info`.
+
 ```bash
 export SITE=newsite   # <-- change this to your site name (e.g. neverstopplaying)
 
 sudo mkdir /var/www/$SITE
 sudo chown wpuser:www-data /var/www/$SITE
 cd /var/www/$SITE
+
+# If logged in as root/admin:
 sudo -u wpuser wp core download --allow-root
+
+# If logged in directly as wpuser:
+wp core download
 ```
 
 ✅ Expected: `Success: WordPress downloaded.`
@@ -37,11 +56,20 @@ sudo -u wpuser wp core download --allow-root
 
 ## Step 2 — Create Database & User
 
+> [!NOTE]
+> **If you get `sudo: 'mysql': command not found`:** MySQL is not installed on this server. Install it natively with:
+> ```bash
+> sudo apt update
+> sudo apt install mysql-server -y
+> sudo systemctl enable --now mysql  # ensure the service is running
+> ```
+
 ```bash
 export SITE=newsite          # same as above
 export DB_PASS=YourPass123   # choose a strong password
 
-sudo mysql -u root -p -e "
+# Run this to create the DB, user, and set privileges:
+sudo mysql -e "
   CREATE DATABASE ${SITE}_db;
   CREATE USER '${SITE}_user'@'localhost' IDENTIFIED BY '${DB_PASS}';
   GRANT ALL PRIVILEGES ON ${SITE}_db.* TO '${SITE}_user'@'localhost';
@@ -127,7 +155,7 @@ Add these **two blocks** inside the `server {}` block, **before** the global `lo
 ```nginx
 # ---- /newsite WordPress ---- (replace 'newsite' with your $SITE value)
 location ~ ^/newsite/(.+\.php)$ {
-    fastcgi_pass unix:/run/php/php8.3-wordpress.sock;
+    fastcgi_pass unix:/run/php/php8.5-wordpress.sock;
     fastcgi_param SCRIPT_FILENAME /var/www/newsite/$1;
     fastcgi_param SCRIPT_NAME /newsite/$1;
     fastcgi_param REQUEST_URI $request_uri;
