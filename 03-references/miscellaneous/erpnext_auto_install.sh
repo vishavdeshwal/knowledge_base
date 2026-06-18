@@ -95,6 +95,28 @@ SYS_ARCH=$(dpkg --print-architecture)
 log "System architecture: $SYS_ARCH"
 
 # ==============================================================================
+# Detect Public IP
+# Used as server_name fallback when no domain is provided, so the site is
+# accessible via http://<public-ip> without needing a domain name.
+# ==============================================================================
+log "Detecting public IP..."
+PUBLIC_IP=$(curl -sf --max-time 5 http://checkip.amazonaws.com \
+    || curl -sf --max-time 5 https://api.ipify.org \
+    || curl -sf --max-time 5 https://ifconfig.me \
+    || echo "")
+if [ -n "$PUBLIC_IP" ]; then
+    log "Public IP detected: $PUBLIC_IP"
+else
+    warn "Could not detect public IP — will use '_' as server_name (nginx catch-all)."
+    PUBLIC_IP="_"
+fi
+
+# Determine effective server identity for nginx server_name
+# Priority: domain (if provided) > public IP > catch-all
+SERVER_IDENTITY="${DOMAIN_NAME:-$PUBLIC_IP}"
+log "Nginx server_name will be set to: $SERVER_IDENTITY"
+
+# ==============================================================================
 # 3. Swap
 # ==============================================================================
 SWAP_MB=$(free -m | awk '/^Swap:/ {print $2}')
@@ -507,31 +529,30 @@ if [ "$SETUP_TYPE" == "managed" ]; then
 fi
 
 # ==============================================================================
-# 14. Nginx Domain Fix
-# Always runs — ensures server_name reflects the domain entered at setup,
-# regardless of whether production setup was skipped on a re-run.
+# 14. Nginx server_name Fix
+# Always runs — sets server_name to:
+#   - the domain entered at setup (if provided), OR
+#   - the public IP of the server (so http://<ip> works without a domain)
 # ==============================================================================
-if [ -n "$DOMAIN_NAME" ] && [ -f "$NGINX_SITES_CONF" ]; then
-    if grep -q "server_name.*${DOMAIN_NAME}" "$NGINX_SITES_CONF"; then
-        skip "Nginx server_name already set to $DOMAIN_NAME."
+if [ -f "$NGINX_SITES_CONF" ]; then
+    if grep -q "server_name.*${SERVER_IDENTITY}" "$NGINX_SITES_CONF"; then
+        skip "Nginx server_name already set to ${SERVER_IDENTITY}."
     else
-        log "Setting server_name to $DOMAIN_NAME in Nginx config..."
-        # Replace any existing server_name value — covers site name, localhost,
-        # or whatever bench generated — with the actual domain
-        sudo sed -i "s/^\(\s*server_name\s\+\).\+;/\1${DOMAIN_NAME};/" \
+        log "Setting server_name to ${SERVER_IDENTITY} in Nginx config..."
+        # Replaces ANY value bench put in server_name (site name, localhost, etc.)
+        sudo sed -i "s/^\(\s*server_name\s\+\).\+;/\1${SERVER_IDENTITY};/" \
             "$NGINX_SITES_CONF"
 
-        # Verify the replacement worked
-        if grep -q "server_name.*${DOMAIN_NAME}" "$NGINX_SITES_CONF"; then
-            log "server_name set to ${DOMAIN_NAME} successfully."
+        # Verify
+        if grep -q "server_name.*${SERVER_IDENTITY}" "$NGINX_SITES_CONF"; then
+            log "server_name set to ${SERVER_IDENTITY} successfully."
         else
             warn "sed replacement may have failed. Current server_name lines:"
             grep "server_name" "$NGINX_SITES_CONF" || true
         fi
     fi
 else
-    [ -z "$DOMAIN_NAME" ] && skip "No domain provided — skipping server_name update."
-    [ ! -f "$NGINX_SITES_CONF" ] && warn "Nginx config not found at $NGINX_SITES_CONF — skipping domain update."
+    warn "Nginx config not found at $NGINX_SITES_CONF — skipping server_name update."
 fi
 
 sudo nginx -t && sudo systemctl reload nginx \
@@ -561,7 +582,7 @@ log "================================================================="
 log "       ERPNext v16 Installation Complete!"
 log "================================================================="
 log "Site Name:      $SITE_NAME"
-log "Admin URL:      http${ENABLE_SSL:+s}://${DOMAIN_NAME:-$SITE_NAME}"
+log "Admin URL:      http${ENABLE_SSL:+s}://${SERVER_IDENTITY}"
 log "Username:       Administrator"
 log "Password:       (as entered during setup)"
 log "Nginx config:   /etc/nginx/sites-enabled/${SITE_NAME}"
