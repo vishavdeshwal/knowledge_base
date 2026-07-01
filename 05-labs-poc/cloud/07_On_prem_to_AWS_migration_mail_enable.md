@@ -40,7 +40,7 @@ Phase 3: Once validated, cut production DNS over to AWS server
 
 ### How MGN Works
 
-![MGN Migration Dashboard](../../Images/13-mgn-dashboard.png)
+![MGN Migration Dashboard](Images/13-mgn-dashboard.png)
 
 AWS MGN (Application Migration Service) replicates a server at the byte level from source to destination:
 
@@ -303,7 +303,7 @@ Mail servers need a static IP because:
 
 ### Why PTR (Reverse DNS) Matters
 
-![AWS Elastic IP with PTR Record Set](../../Images/09-aws-elastic-ip-ptr.png)
+![AWS Elastic IP with PTR Record Set](Images/09-aws-elastic-ip-ptr.png)
 
 When your server connects to Gmail:
 ```
@@ -324,7 +324,7 @@ All records were added in GoDaddy under `<testing-root-domain>` for the subdomai
 
 ### A Record — The Foundation
 
-![AWS Security Group Inbound Rules](../../Images/10-aws-security-group.png)
+![AWS Security Group Inbound Rules](Images/10-aws-security-group.png)
 
 ```
 mail.<project-name>.staging.<testing-root-domain>  →  <your-elastic-ip>
@@ -400,7 +400,7 @@ All four must be consistent. One mismatch = deliverability problems.
 
 This is the most confusing part of MailEnable's structure:
 
-![MailEnable MMC Full Tree](../../Images/01-mailenable-mmc-tree.png)
+![MailEnable MMC Full Tree](Images/01-mailenable-mmc-tree.png)
 
 ```
 Post Office (internal name, max 20 chars, no dots)
@@ -420,11 +420,11 @@ Because the domain `<project-name>.staging.<testing-root-domain>` exceeds 20 cha
 
 ### SMTP Connector — Tab by Tab
 
-![<project-name>staging Mailboxes — admin, postmaster, testuser](../../Images/02-mailenable-mailboxes.png)
+![<project-name>staging Mailboxes — admin, postmaster, testuser](Images/02-mailenable-mailboxes.png)
 
 **General tab:**
 
-![SMTP Connector — General Tab](../../Images/03-smtp-general.png)
+![SMTP Connector — General Tab](Images/03-smtp-general.png)
 
 ```
 Local Domain Name:          mail.<project-name>.staging.<testing-root-domain>
@@ -436,7 +436,7 @@ This is the server's identity. `Local Domain Name` becomes the EHLO value during
 
 **Inbound tab:**
 
-![SMTP Connector — Inbound Tab](../../Images/04-smtp-inbound.png)
+![SMTP Connector — Inbound Tab](Images/04-smtp-inbound.png)
 
 ```
 Port 25: enabled          ← receives mail from other servers
@@ -447,7 +447,7 @@ Port 25 is for server-to-server (unauthenticated). Port 587 is for mail clients 
 
 **Relay tab:**
 
-![SMTP Connector — Relay Tab](../../Images/05-smtp-relay.png)
+![SMTP Connector — Relay Tab](Images/05-smtp-relay.png)
 
 ```
 ✅ Enable Mail Relay
@@ -459,7 +459,7 @@ This is the most security-critical setting. An open relay means anyone can use y
 
 **Security tab:**
 
-![SMTP Connector — Security Tab](../../Images/06-smtp-security.png)
+![SMTP Connector — Security Tab](Images/06-smtp-security.png)
 
 ```
 ✅ Reject mail if sender address is from an invalid domain
@@ -470,7 +470,7 @@ These three settings reject a large percentage of spam at the connection level b
 
 **DNS Blacklisting tab:**
 
-![SMTP Connector — DNS Blacklisting Tab](../../Images/07-smtp-dnsbl.png)
+![SMTP Connector — DNS Blacklisting Tab](Images/07-smtp-dnsbl.png)
 
 ```
 ✅ Enable DNS blacklisting
@@ -559,7 +559,7 @@ default._domainkey.<project-name>.staging  TXT  "v=DKIM1; k=rsa; p=<public key>"
 
 ## 10. The Webmail Access Problem
 
-![MailEnable Webmail Login Page](../../Images/12-webmail-login.png)
+![MailEnable Webmail Login Page](Images/12-webmail-login.png)
 
 ### What Happened
 
@@ -685,7 +685,7 @@ RCPT TO:<victim@gmail.com>   ← external address, not your domain
 
 ## 13. Test Results — Final Verification
 
-![Gmail Show Original — SPF PASS, DMARC PASS](../../Images/11-gmail-spf-dmarc-pass.png)
+![Gmail Show Original — SPF PASS, DMARC PASS](Images/11-gmail-spf-dmarc-pass.png)
 
 | Test | Result |
 |---|---|
@@ -872,7 +872,7 @@ $Shortcut2.Save()
 
 > **Note:** The console opens at Post Offices view by default. Press the **Home key** in the left panel to navigate up to the full `MailEnable Management` root tree.
 
-![MailEnable Admin Console Full Tree — New Server](../../Images/14-new-server-mmc-tree.png)
+![MailEnable Admin Console Full Tree — New Server](Images/14-new-server-mmc-tree.png)
 
 ---
 
@@ -880,7 +880,7 @@ $Shortcut2.Save()
 
 Right-click **Post Offices** in the left panel → **New Post Office**:
 
-![Create New Post Office Dialog](../../Images/15-create-postoffice.jpeg)
+![Create New Post Office Dialog](Images/15-create-postoffice.jpeg)
 
 ```
 Post Office Name: <project-name>staging
@@ -909,7 +909,7 @@ Post Offices → <project-name>staging → Mailboxes
 → Right-click → New Mailbox
 ```
 
-![Create New Mailbox Dialog](../../Images/16-create-mailbox.jpeg)
+![Create New Mailbox Dialog](Images/16-create-mailbox.jpeg)
 
 Create two mailboxes:
 
@@ -932,7 +932,7 @@ postmaster   Enabled  Unlimited  ← auto-created with Post Office
 testuser     Enabled  Unlimited
 ```
 
-![Mailboxes List — admin, postmaster, testuser](../../Images/02-mailenable-mailboxes.png)
+![Mailboxes List — admin, postmaster, testuser](Images/02-mailenable-mailboxes.png)
 
 ---
 
@@ -945,7 +945,7 @@ Servers → localhost → Services and Connectors → SMTP
 
 **General tab:**
 
-![SMTP Connector — General Tab](../../Images/03-smtp-general.png)
+![SMTP Connector — General Tab](Images/03-smtp-general.png)
 
 ```
 Local Domain Name:          mail.<project-name>.staging.<testing-root-domain>
@@ -956,7 +956,7 @@ Notification email:         postmaster@<project-name>.staging.<testing-root-doma
 
 **Inbound tab:**
 
-![SMTP Connector — Inbound Tab](../../Images/04-smtp-inbound.png)
+![SMTP Connector — Inbound Tab](Images/04-smtp-inbound.png)
 
 ```
 Port 25:  enabled  ← server-to-server inbound
@@ -966,7 +966,7 @@ Port 587: enabled  ← authenticated client submission
 
 **Relay tab:**
 
-![SMTP Connector — Relay Tab](../../Images/05-smtp-relay.png)
+![SMTP Connector — Relay Tab](Images/05-smtp-relay.png)
 
 ```
 ✅ Allow Mail Relay
@@ -977,7 +977,7 @@ Port 587: enabled  ← authenticated client submission
 
 **Security tab:**
 
-![SMTP Connector — Security Tab](../../Images/06-smtp-security.png)
+![SMTP Connector — Security Tab](Images/06-smtp-security.png)
 
 ```
 ✅ Sender email domain must be local or resolvable through DNS
@@ -987,7 +987,7 @@ PTR Record Check: Reject mail from senders without PTR records
 
 **DNS Blacklisting tab:**
 
-![SMTP Connector — DNS Blacklisting Tab](../../Images/07-smtp-dnsbl.png)
+![SMTP Connector — DNS Blacklisting Tab](Images/07-smtp-dnsbl.png)
 
 ```
 ✅ Enable DNS blacklisting
@@ -1092,7 +1092,7 @@ Access webmail at:
 http://webmail.<project-name>.staging.<testing-root-domain>/Mondo/lang/sys/Login.aspx
 ```
 
-![MailEnable Webmail Login Page](../../Images/21-webmail-login-new.png.png)
+![MailEnable Webmail Login Page](Images/21-webmail-login-new.png.png)
 
 Login format:
 ```

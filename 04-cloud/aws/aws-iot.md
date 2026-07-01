@@ -49,7 +49,7 @@
 ---
 
 ## 1. AWS IoT Services overview
-![](../../Images/AWS_iot_svc.png) 
+![](Images/AWS_iot_svc.png) 
 
 AWS IoT provides services that support IoT devices that interact with the world and the data that passes between them and AWS IoT.
 - Humans/Apps/K8s (Infra on Cloud) <------> AWS IoT <-------> device shadow <-----> IoT Devices.
@@ -124,7 +124,7 @@ AWS IoT provides services that support IoT devices that interact with the world 
 ---
 # AWS IoT Core Services
 It provides the services that connect your `IoT devices` to AWS Cloud so that other cloud services and applications can interact with your _interenet-connected devices._ 
-![](../../Images/aws_iot_core.PNG)
+![](Images/aws_iot_core.PNG)
 
 ## 1. __AWS IoT Core messaging services__
 IoT Core connectivity services provide secure communication with the IoT devices and manage the messages that pass between them and AWS IoT.

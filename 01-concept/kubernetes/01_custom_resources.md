@@ -6,14 +6,14 @@ Red marked = API Endpoint groups, when we type commands like `kubectl get pods` 
 
 ---
 
-![](../../Images/api-endpoint.png)
+![](Images/api-endpoint.png)
 
 ---
 
 
 `Kube Aggregator` = It is a component of _kube-apiserver_ and sits in front of **API Service** object. It routes requests for **_registered extension API groups_**. For built-in resources like deployments, pods, services etc., those go straight to the main **kube-apiserver**. For Custom resources, we have to register them to the `Aggregator`.
 
-![](../../Images/aggregator.png)
+![](Images/aggregator.png)
 
 ---
 

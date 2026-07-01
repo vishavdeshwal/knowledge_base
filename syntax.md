@@ -43,6 +43,15 @@ Quotes
 1. sdfdsf
 
 
+Wikilinks (backlinking between notes — Obsidian resolves these automatically,
+they're what powers the Backlinks pane and Graph view)
+[[note-name]]
+[[note-name|display text]]
+
+Used by the /kb-compile and /kb-ask workflow to connect a new article to the
+related notes it draws on. See README.md → "Ingest → Compile → Ask → Lint Workflow".
+
+
 ## underline
 
 or 

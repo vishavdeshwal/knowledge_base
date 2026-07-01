@@ -1,0 +1,195 @@
+{
+  "main": {
+    "id": "f48ba43785c09cf9",
+    "type": "split",
+    "children": [
+      {
+        "id": "18cc65c8df0ebe21",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "016aff36e3b4d247",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "5074baa984669817",
+    "type": "split",
+    "children": [
+      {
+        "id": "4e0cef20445bb455",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "77d15964c82db842",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "2c57b9686af187aa",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "0e296531d97d5deb",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "037f7fc40a6ccd15",
+    "type": "split",
+    "children": [
+      {
+        "id": "b3ef7ff9cda0e65a",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "8641905567a423ac",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "8b1e3e8145084185",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "34dd1a7cfdca808e",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "f08a6773f91e864b",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "e61d887989c40027",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "016aff36e3b4d247",
+  "lastOpenFiles": [
+    "01-concept/cloud/aws/01_Advanced_permissions/02_advanced_permissions.md",
+    "outputs/README.md",
+    "outputs",
+    "tools/README.md",
+    "tools/kb_lint.py",
+    "tools/kb_search.py",
+    "tools",
+    "raw/README.md",
+    "raw",
+    "02-playbooks/cloud/sam-terraform-drift-sync-playbook.md",
+    "06-incidents/2026/tenxyou-wordpress-rca-2026-06-30.md",
+    "06-incidents/2026/tenxyou-wordpress-seo-spam-backdoor-2026-06-28.md",
+    "01-concept/cloud/aws/01_Advanced_permissions/01_ideal_outcomes.md"
+  ]
+}

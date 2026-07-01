@@ -215,6 +215,64 @@ Referenced from markdown files only.
 
 ---
 
+## raw/
+
+**Purpose:**
+Staging area for source material that hasn't been synthesized into the wiki yet
+— web clips, papers, exported logs. See `raw/README.md`.
+
+**Rules:**
+- Read-only once something lands here — edit the compiled article, not the source
+- Not pre-categorized — categorization happens at compile time
+
+---
+
+## tools/
+
+**Purpose:**
+Small dependency-free scripts an agent (or you) can call instead of grepping the
+whole vault: `kb_search.py` (naive TF search), `kb_lint.py` (wiki health check).
+See `tools/README.md`.
+
+---
+
+## outputs/
+
+**Purpose:**
+Generated visual artifacts from Q&A sessions — Marp slide decks (`slides/`),
+matplotlib charts (`charts/`). See `outputs/README.md`.
+
+**Rules:**
+- Anything worth keeping gets linked from the wiki article it answers
+- Not a dumping ground — delete one-off charts that didn't lead anywhere
+
+---
+
+## Ingest → Compile → Ask → Lint Workflow
+
+This is the loop (after Andrej Karpathy's [LLM Knowledge Bases](https://karpathy.bearblog.dev/) note)
+that keeps this repo growing instead of just accumulating:
+
+1. **Ingest** — drop source material into `raw/` (Obsidian Web Clipper, PDFs, logs)
+2. **Compile** (`/kb-compile`) — an agent reads what's in `raw/`, decides where it
+   belongs in 01-06 using the folder philosophy above, writes the article, and
+   backlinks it to related notes and to its `raw/` source
+3. **Ask** (`/kb-ask`) — ask a research question against the wiki; the agent
+   searches (`/kb-search` → `tools/kb_search.py`), reads the relevant articles in
+   full, answers, and — if the synthesis is worth keeping — files it back into
+   the wiki as a new/updated article
+4. **Lint** (`/kb-lint`) — periodically run `tools/kb_lint.py` to catch broken
+   links, stub files, and unlinked notes before they pile up
+
+Backlinking uses standard Obsidian `[[wikilinks]]` (see `syntax.md`) — the
+Obsidian backlink pane is how you browse the graph this builds.
+
+These four live as slash commands in `AI/commands/` (`kb-compile.md`,
+`kb-search.md`, `kb-ask.md`, `kb-lint.md`), same convention as `/diagnose`,
+`/dns-migrate`, etc.
+
+---
+
 ## Naming Convention (Important)
 
 Files are named using **problem-first language**:

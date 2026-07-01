@@ -8,7 +8,7 @@ However, internal services were also calling the same endpoint, which might caus
 Goal:
 Apply rate limiting only to external traffic while keeping internal calls unrestricted.
 
-![](../../Images/tenxyou_architecture.png)
+![](Images/tenxyou_architecture.png)
 
 ## Existing Architecture (Before)
 - api.tenxyou.com → CloudFront → ALB → backend
@@ -16,7 +16,7 @@ Apply rate limiting only to external traffic while keeping internal calls unrest
 - No traffic separation
 - WAF planned but not yet enforced
 
-![](../../Images/tenxyou_backend_communication.png)
+![](Images/tenxyou_backend_communication.png)
 
 ## Target Architecture (After)
 External traffic:
@@ -30,7 +30,7 @@ Key properties:
 - Internal traffic bypasses CloudFront and WAF
 - DNS-based traffic separation
 
-![](../../Images/tenxyou_new_flow.png)
+![](Images/tenxyou_new_flow.png)
 
 ---
 ---
@@ -39,7 +39,7 @@ Key properties:
 
 ### Step 1: Identify WAF Scope (Critical)
 WAF must be attached to **CloudFront**, not ALB.
-![](../../Images/waf_scope.png)
+![](Images/waf_scope.png)
 
 **Why**
 - WAF on ALB would affect both internal and external traffic

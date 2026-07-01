@@ -129,6 +129,12 @@ iptables -A OUTPUT -d 144.172.116.48 -j DROP   # known exfil C2
 iptables-save > /etc/iptables/rules.v4
 ```
 
+**Note:** OUTPUT rules above work fine. But if you're trying to block *inbound* access to a Docker-published Postgres port, `iptables -A INPUT ... -j DROP` does **NOT** work — Docker routes published-port traffic through DNAT + the `FORWARD` chain, which never touches `INPUT`. Use the `DOCKER-USER` chain instead, or just bind the container to `127.0.0.1` and drop the public port mapping. Verify with `nc -zv <host_ip> <port>` from an external machine — don't trust the `INPUT` chain alone. See [iof3208-multipayload-cryptominer-2026-06-25](../../06-incidents/2026/iof3208-multipayload-cryptominer-2026-06-25.md).
+
+## Rootkit-Hidden Processes (in-container `ps`/`top` lies)
+
+Some variants of this malware replace `ldd`/`top` inside the container (e.g. at `/usr/bin/.local/bin/`) so `docker exec <container> ps -ef` shows a clean process list. **Always cross-check with `docker top <container>` from the host** — it reads the host's real process table and is not affected by in-container tampering. If `docker top` shows processes that `docker exec ps -ef` doesn't, you have this rootkit. Kill by host PID directly (`kill -9 <pid>` on the host), not via `docker exec`.
+
 ---
 
 ## Why `docker rm` + `docker run` Doesn't Fix This

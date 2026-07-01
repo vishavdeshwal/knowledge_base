@@ -25,7 +25,7 @@
 
 Backend services were deployed on ECS in **private subnets**, but internal service-to-service calls were being routed over **public domains** — causing unnecessary internet traversal.
 
-![Tenxyou Service Flow](../../Images/tenxyou_backend_communication.png)
+![Tenxyou Service Flow](Images/tenxyou_backend_communication.png)
 
 ### What was happening
 
@@ -176,7 +176,7 @@ This becomes the **DNS suffix** for all Service Connect services in this cluster
 
 Click **Add port mappings and applications** and fill in:
 
-![Service Connect Configuration](../../Images/service_connect.png)
+![Service Connect Configuration](Images/service_connect.png)
 
 | Field | Value | Notes |
 |-------|-------|-------|

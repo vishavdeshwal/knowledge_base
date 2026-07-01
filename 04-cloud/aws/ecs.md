@@ -58,7 +58,7 @@ Service Connect allows ECS services to:
 ---
 
 ### High-Level Architecture
-<img src="../../Images/tenxyou_backend_communication.png" alt="Backend Communication" width="900">
+<img src="Images/tenxyou_backend_communication.png" alt="Backend Communication" width="900">
 
 ---
 

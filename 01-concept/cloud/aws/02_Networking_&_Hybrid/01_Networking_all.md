@@ -4,7 +4,7 @@
 Network gateway Objects (transit gateway or virtual private gateway) ensure VPC traffic reaches to On-prem network.
 
 
-![](../../../../Images/vpc-router.png)
+![](Images/vpc-router.png)
 - Every VPC is created with a **Main Route Table**
 - **default** for every subnet in the VPC
 - _custom route tables_  can be created and associated with subnets in the VPC - removing the Main RT.
@@ -19,13 +19,13 @@ Network gateway Objects (transit gateway or virtual private gateway) ensure VPC 
 - Utilise parent region for control plane operations. (EBS snapshots are to parent)
 - Use local zones when you need the "HIGHEST" performance.
 
-![](../../../../Images/aws-local-zones.png)
+![](Images/aws-local-zones.png)
 
 
 ## 3. Border Gateway Protocol (BGP)
 It is a system made up of a lots of self managing network known as AS (Autonomous System). It could be a large network or a large collection of router. And it is generally controlled by one entity.
 
-![](../../../../Images/bgp-protocol.png)
+![](Images/bgp-protocol.png)
 
 ---
 
@@ -163,7 +163,7 @@ It starts with two `Any Cast IP Addresses` (1.2.3.4 and 4.3.2.1). It allows a si
 ---
 
 
-![](../../../../Images/global-accelerator.png)
+![](Images/global-accelerator.png)
 
 
 - When using Global accelerator, `Any Cast IP` is allocated that routes to the nearest `Global Accelerator Edge Location`.
@@ -177,13 +177,13 @@ It starts with two `Any Cast IP Addresses` (1.2.3.4 and 4.3.2.1). It allows a si
 ## 5. IPSEC VPN Fundamentals
 It is a group of protocols (exchanging keys, encrypting data, authenticating data) that are used to secure tunnels accross insecure networks between two peers (Local and Remote). It has two main phases to setup a secure VPN Connection.
 
-![](../../../../Images/IP-sec.png)
+![](Images/IP-sec.png)
 
 ### __Phase 1__ (**Slow and Heavy**)
 ---
 `IKE phase 1` (Internet Key Exchange) = It is Slow and heavy, one authenticate - Pre-shared Key (password)/Certificate, using Asymmetric encryption to agree on, and create a shared Symmetric key
 
-![](../../../../Images/ipsec-ph1.png)
+![](Images/ipsec-ph1.png)
 
 - Site1 and Site2 exchanges either `Certificate or Pre-shared Key` to proving identities.
     - It's like both party agrees to be part of this VPN.
@@ -199,7 +199,7 @@ It is a group of protocols (exchanging keys, encrypting data, authenticating dat
 ### Phase 2
 `IKE phase 2` = It is Fast and uses the keys agreed in `phase 1`. Agree encryption method, and keys used for bulk data transfer. It create IPSEC SA (Phase 2 tunnel).
 
-![](../../../../Images/ipsec-ph2.png)
+![](Images/ipsec-ph2.png)
 
 - By this time both sides have `DH Key` and `Symmetric Key`.
 - Now `Symmetric Key` is used to encrypt and decrypt more __key material__ and __agreements__ between peers.
@@ -212,7 +212,7 @@ It is a group of protocols (exchanging keys, encrypting data, authenticating dat
 
 #### Two types of VPN :- Policy based VPN and Route based VPN
 
-![](../../../../Images/types_of_vpn.png)
+![](Images/types_of_vpn.png)
 
 1. Policy based VPNs
     - Rules set that match traffic
@@ -226,7 +226,7 @@ It is a group of protocols (exchanging keys, encrypting data, authenticating dat
 ## 6. AWS Site-to-Site VPN
 A logical connection between a VPC and on-premises network encrypted using IPSEC. It is fully HA and can be provision in less than an hour.
 
-![](../../../../Images/s2s-vpn.png)
+![](Images/s2s-vpn.png)
 
 - `VGW` = **Virtual Private Gateway** is logical gateway Object that is a target on route tables.
 - `CGW` = **Customer Gateway** is a physical device or software application in your on-premises network that represents the on-premises side of the VPN connection.
@@ -234,7 +234,7 @@ A logical connection between a VPC and on-premises network encrypted using IPSEC
 
 ---
 ### STATIC vs DYNAMIC VPN
-![](../../../../Images/staticVSdynamic.png)
+![](Images/staticVSdynamic.png)
 
 - Speed Limitations for VPN ~ 1.25 Gbps
 - Latency --> Inconsistent, depends on the path taken over internet.
@@ -246,10 +246,10 @@ A logical connection between a VPC and on-premises network encrypted using IPSEC
 ## 7. Transit Gateway
 It is a `Network Gateway Object` used to connect VPCs to Other networks. (VPC, Site-to-Site VPN & DX).
 
-![](../../../../Images/transit-gateway.png)
+![](Images/transit-gateway.png)
 
 ---
-![](../../../../Images/transit-gateway1.png)
+![](Images/transit-gateway1.png)
 
 - A TGW by default has one RT.
 - All attachments use this RT for routing decisions.
